@@ -25,3 +25,4 @@
     - declarer la variable et definis sa valeur dans le web.xml
     - Creer des class et mettre des annotation, puis voir le resultat dans tomcat pour virifie si le framework marche bien
 
+// pull request adino sprint1
