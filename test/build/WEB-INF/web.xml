@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://jakarta.ee/xml/ns/jakarta.ee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://jakarta.ee/xml/ns/jakarta.ee
-        http://jakarta.ee/xml/ns/jakarta.ee/web-app_2_4.xsd"
-    version="2.4">
-    <display-name>FirstFramework</display-name>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
 
+    <display-name>FirstFramework</display-name>
 
     <servlet>
         <servlet-name>FrontController</servlet-name>
         <servlet-class>controller.FrontController</servlet-class>
+        <init-param>
+            <param-name>package</param-name>
+            <param-value>cotrollerelse</param-value>
+        </init-param>
     </servlet>
 
     <servlet-mapping>
         <servlet-name>FrontController</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/</url-pattern>
     </servlet-mapping>
+
 </web-app>

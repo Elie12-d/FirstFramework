@@ -6,7 +6,7 @@ SRC_DIR="src/main/java"
 WEB_DIR="src/main/webapps"
 BUILD_DIR="build"
 LIB_DIR="lib"
-TOMCAT_WEBAPPS="/home/elie/apache-tomcat-10.1.28/webapps"
+TOMCAT_WEBAPPS="/home/john/apache-tomcat-10.1.55/webapps"
 SERVLET_API_JAR="$LIB_DIR/servlet-api.jar"
 MY_FRAMEWORK_JAR="$LIB_DIR/URLframework.jar"
 
@@ -40,9 +40,9 @@ cp -f $BUILD_DIR/$APP_NAME.war $TOMCAT_WEBAPPS/
 
 echo "Redemarrage de Tomcat pour prendre en compte le nouveau déploiement..."
 
-sudo /home/elie/apache-tomcat-10.1.28/bin/shutdown.sh
+sudo /home/john/apache-tomcat-10.1.55/bin/shutdown.sh
 sleep 1
-sudo /home/elie/apache-tomcat-10.1.28/bin/startup.sh
+sudo /home/john/apache-tomcat-10.1.55/bin/startup.sh
 
 echo ""
 echo "Déploiement terminé. Redémarrez Tomcat si nécessaire."

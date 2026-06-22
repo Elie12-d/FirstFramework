@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME) // ndique a Java de conserver l'annotation dans le fichier .class 
+@Retention(RetentionPolicy.RUNTIME) // indique a Java de conserver l'annotation dans le fichier .class 
 // et la rendre accessible via la réflexion lors de l'execution.
 
 @Target(ElementType.TYPE) // .TYPE pour les class
