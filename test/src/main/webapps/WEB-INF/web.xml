@@ -12,7 +12,7 @@
         <servlet-class>controller.FrontController</servlet-class>
         <init-param>
             <param-name>package</param-name>
-            <param-value>cotrollerelse</param-value>
+            <param-value>cotroller</param-value>
         </init-param>
     </servlet>
 
