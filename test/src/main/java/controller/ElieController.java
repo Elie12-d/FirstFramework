@@ -5,15 +5,14 @@ import annotation.GetMapping;
 
 @Controllerako
 public class ElieController {
+    
+    @GetMapping("/")  // ← Mapping pour la racine
+    public String index() {
+        return "Page d'accueil";
+    }
+    
     @GetMapping("/hello")
-    public void hello() {
-    }
-
-    @GetMapping("/test")
-    public void test() {
-    }
-
-    @GetMapping // URL vide
-    public void index() {
+    public String hello() {
+        return "Hello World";
     }
 }
