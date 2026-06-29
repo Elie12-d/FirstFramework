@@ -1,6 +1,10 @@
 package utils;
 
 import java.util.List;
+import java.util.Map;
+
+import annotation.GetMapping;
+
 import java.util.ArrayList;
 import java.io.File;
 import java.net.URL;
@@ -68,5 +72,28 @@ public class UtilsFunctions {
             }
         }
         return annotatedClasses;
+    }
+
+    public void scanMappings(List<Class<?>> controllerClasses, Map<String, RouteMapping> urlMappings) {
+        for (Class<?> controllerClass : controllerClasses) {
+            for (Method method : controllerClass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(GetMapping.class)) {
+                    GetMapping mapping = method.getAnnotation(GetMapping.class);
+                    String url = mapping.value();
+
+                    // if (url == null || url.isEmpty()) {
+                    //     url = "/" + method.getName();
+                    // }
+
+                    // Créer le RouteMapping
+                    RouteMapping routeMapping = new RouteMapping();
+                    routeMapping.setController(controllerClass);
+                    routeMapping.setMethod(method);
+
+                    // Stocker dans la Map
+                    urlMappings.put(url, routeMapping);
+                }
+            }
+        }
     }
 }
