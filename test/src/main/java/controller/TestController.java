@@ -12,8 +12,8 @@ public class TestController {
     // }
 
     @GetMapping("/elie")
-    public void testDoublonGet() {
-
+    public String testDoublonGet() {
+        return "teste kely raha miverina";
     }
 
     @PostMapping("/elie")
