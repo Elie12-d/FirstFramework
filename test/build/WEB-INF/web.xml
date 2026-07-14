@@ -12,13 +12,13 @@
         <servlet-class>controller.FrontController</servlet-class>
         <init-param>
             <param-name>package</param-name>
-            <param-value>cotroller</param-value>
+            <param-value>controller</param-value>
         </init-param>
     </servlet>
 
     <servlet-mapping>
         <servlet-name>FrontController</servlet-name>
-        <url-pattern>/</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

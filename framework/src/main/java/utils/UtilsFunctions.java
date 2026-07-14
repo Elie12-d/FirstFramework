@@ -3,7 +3,7 @@ package utils;
 import java.util.List;
 import java.util.Map;
 
-import annotation.GetMapping;
+import annotation.*;
 
 import java.util.ArrayList;
 import java.io.File;
@@ -43,57 +43,45 @@ public class UtilsFunctions {
         return classes;
     }
 
-    public List<Class<?>> getAllClassesWithAnnotation(List<Class<?>> classes,
-            Class<? extends Annotation> annotationClass, String niveau) {
-        ArrayList<Class<?>> annotatedClasses = new ArrayList<Class<?>>();
+    public void scanAllClassesWithAnnotationAndPutMap(List<Class<?>> classes,
+            Class<? extends Annotation> annotationClass, String niveau, Map<RouteKey, RouteMapping> urlMappings) throws Exception {
         if (niveau.equals("class")) {
             for (Class<?> clazz : classes) {
                 if (clazz.isAnnotationPresent(annotationClass)) {
-                    annotatedClasses.add(clazz);
-                }
-            }
-        } else if (niveau.equals("method")) {
-            for (Class<?> clazz : classes) {
-                for (Method method : clazz.getDeclaredMethods()) {
-                    if (method.isAnnotationPresent(annotationClass)) {
-                        annotatedClasses.add(clazz);
-                        break;
-                    }
-                }
-            }
-        } else if (niveau.equals("attribute")) {
-            for (Class<?> clazz : classes) {
-                for (Field field : clazz.getDeclaredFields()) {
-                    if (field.isAnnotationPresent(annotationClass)) {
-                        annotatedClasses.add(clazz);
-                        break;
+                    // annotatedClasses.add(clazz);
+                    for (Method method : clazz.getDeclaredMethods()) {
+                        // pour le @GetMapping
+                        if (method.isAnnotationPresent(GetMapping.class)) {
+                            GetMapping mapping = method.getAnnotation(GetMapping.class);
+                            addMapping(clazz, method, mapping.value(), "GET", urlMappings);
+                        }
+
+                        // pour le @PostMapping
+                        if (method.isAnnotationPresent(PostMapping.class)) {
+                            PostMapping mapping = method.getAnnotation(PostMapping.class);
+                            addMapping(clazz, method, mapping.value(), "POST", urlMappings);
+                        }
                     }
                 }
             }
         }
-        return annotatedClasses;
     }
 
-    public void scanMappings(List<Class<?>> controllerClasses, Map<String, RouteMapping> urlMappings) {
-        for (Class<?> controllerClass : controllerClasses) {
-            for (Method method : controllerClass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(GetMapping.class)) {
-                    GetMapping mapping = method.getAnnotation(GetMapping.class);
-                    String url = mapping.value();
-
-                    // if (url == null || url.isEmpty()) {
-                    //     url = "/" + method.getName();
-                    // }
-
-                    // Créer le RouteMapping
-                    RouteMapping routeMapping = new RouteMapping();
-                    routeMapping.setController(controllerClass);
-                    routeMapping.setMethod(method);
-
-                    // Stocker dans la Map
-                    urlMappings.put(url, routeMapping);
-                }
-            }
+    private void addMapping(Class<?> controllerClass, Method method, String url, String httpMethod,
+            Map<RouteKey, RouteMapping> urlMappings)
+            throws Exception {
+        RouteKey key = new RouteKey(url, httpMethod);
+        // verification doublon
+        if (urlMappings.containsKey(key)) {
+            RouteMapping existing = urlMappings.get(key);
+            throw new Exception("Doublon detecte\n" + "URL: " + key + "\n"
+                    + "methode existante: " + existing.getMethod().getName()
+                    + "()\n" + "Nouvelle methode: " + method.getName() + "()\n");
         }
+        // Ajout du mapping
+        RouteMapping routeMapping = new RouteMapping();
+        routeMapping.setController(controllerClass);
+        routeMapping.setMethod(method);
+        urlMappings.put(key, routeMapping);
     }
 }
