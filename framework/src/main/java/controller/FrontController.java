@@ -36,8 +36,17 @@ public class FrontController extends HttpServlet {
         RouteKey key = new RouteKey(path, httpMethod);
 
         if (urlMappings.containsKey(key)) {
-            RouteMapping mapping = urlMappings.get(key);
-            displayMapping(req, res, path, mapping);
+            try {
+                RouteMapping mapping = urlMappings.get(key);
+                Class<?> controllerClass = mapping.getController();
+                Object controller = controllerClass.getDeclaredConstructor().newInstance();
+                Method method = mapping.getMethod();
+                Object result = method.invoke(controller);
+                displayResult(req, res, result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //displayMapping(req, res, path, mapping);
         } else {
             handleNotFound(req, res);
         }
@@ -101,6 +110,26 @@ public class FrontController extends HttpServlet {
         out.println("    <p><strong>Methode HTTP :</strong> " + req.getMethod() + "</p>");
         out.println("    <p><strong>Controleur :</strong> " + mapping.getController().getSimpleName() + "</p>");
         out.println("    <p><strong>Methode :</strong> " + mapping.getMethod().getName() + "()</p>");
+        out.println("</body>");
+        out.println("</html>");
+    }
+
+    private void displayResult(HttpServletRequest req, HttpServletResponse res, Object result)
+            throws IOException {
+        res.setContentType("text/html");
+        PrintWriter out = res.getWriter();
+
+        out.println("<!DOCTYPE html>");
+        out.println("<html>");
+        out.println("<head>");
+        out.println("    <meta charset=\"UTF-8\">");
+        out.println("    <title>Resultat du controleur</title>");
+        out.println("</head>");
+        out.println("<body>");
+        out.println("    <h1>Resultat du controleur</h1>");
+        out.println("    <p><strong>URL :</strong> " + req.getPathInfo() + "</p>");
+        out.println("    <p><strong>Methode HTTP :</strong> " + req.getMethod() + "</p>");
+        out.println("    <p><strong>Resultat :</strong> " + result + "</p>");
         out.println("</body>");
         out.println("</html>");
     }
