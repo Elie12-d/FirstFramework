@@ -2,12 +2,22 @@ package controller;
 
 import annotation.Controllerako;
 import annotation.GetMapping;
+import annotation.PostMapping;
 
 @Controllerako
 public class TestController {
-    
-    @GetMapping("/test")
-    public String test() {
-        return "Test OK";
+    // @GetMapping("/elie")
+    // public void testGet() {
+
+    // }
+
+    @GetMapping("/elie")
+    public void testDoublonGet() {
+
+    }
+
+    @PostMapping("/elie")
+    public void testPost() {
+        
     }
 }
