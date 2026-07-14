@@ -16,14 +16,8 @@ public class FrontController extends HttpServlet {
     private Map<RouteKey, RouteMapping> urlMappings = new HashMap<>();
 
     public void init() throws ServletException {
-        String packageName = this.getInitParameter("package");
-        UtilsFunctions utils = new UtilsFunctions();
-        List<Class<?>> classes = utils.getAllClassByPackage(packageName);
-        try {
-            utils.scanAllClassesWithAnnotationAndPutMap(classes, Controllerako.class, "class", urlMappings);
-        } catch (Exception e) {
-            throw new ServletException("Configuration des mappings invalide: " + e.getMessage(), e);
-        }
+        urlMappings = (Map<RouteKey, RouteMapping>) 
+        getServletContext().getAttribute("urlMappings");
     }
 
     protected void processRequest(HttpServletRequest req, HttpServletResponse res)
