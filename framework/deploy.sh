@@ -1,10 +1,16 @@
 #!/bin/bash
+set -e
+echo "Compilation normale des fichiers Java..."
+# Création du dossier build s'il n'existe pas
+mkdir -p build
 
-echo "compilation compatible avec Java 17 en raison de Tomcat 10.1.28..."
-javac --release 17 -cp lib/servlet-api.jar -d build src/main/java/controller/*.java src/main/java/utils/*.java src/main/java/annotation/*.java src/main/java/listner/*.java
+# Compilation standard (utilise la version installée par défaut sur votre machine)
+javac --release 17 -cp "lib/*" -d build src/main/java/controller/*.java src/main/java/utils/*.java src/main/java/annotation/*.java src/main/java/listener/*.java src/main/java/model/*.java src/main/java/database/*.java src/main/java/container/*.java
 
-echo "génération du fichier .jar..."
+echo "Compilation terminée. Les fichiers .class sont dans le dossier 'build'."
+
+echo "Génération du fichier .jar..."
+# Crée le fichier URLframework.jar à partir du contenu du dossier build
 jar cvf URLframework.jar -C build .
 
-echo "copie du .jar dans le dossier lib du projet de test..."
-cp URLframework.jar ../test/lib/
+echo "Fichier URLframework.jar généré avec succès !"
