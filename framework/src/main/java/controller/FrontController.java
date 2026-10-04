@@ -1,130 +1,154 @@
-package controller;
+package main.java.controller;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import utils.*;
-import annotation.*;
-
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import main.java.annotation.ApiREST;
+import main.java.http.HttpMethode;
+import main.java.mapping.Mapping;
+import main.java.mapping.UrlMethode;
+import main.java.utils.Util;
+import main.java.view.ModelAndView;
+
 public class FrontController extends HttpServlet {
-    private Map<RouteKey, RouteMapping> urlMappings = new HashMap<>();
 
-    public void init() throws ServletException {
-        urlMappings = (Map<RouteKey, RouteMapping>) 
-        getServletContext().getAttribute("urlMappings");
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        processRequest(req, resp);
     }
 
-    protected void processRequest(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, IOException {
-        String path = req.getPathInfo();
-        if (path == null)
-            path = "/";
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        processRequest(req, resp);
+    }
 
-        String httpMethod = req.getMethod();
-        RouteKey key = new RouteKey(path, httpMethod);
+    private void processRequest(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = req.getServletContext();
 
-        if (urlMappings.containsKey(key)) {
-            try {
-                RouteMapping mapping = urlMappings.get(key);
-                Class<?> controllerClass = mapping.getController();
-                Object controller = controllerClass.getDeclaredConstructor().newInstance();
-                Method method = mapping.getMethod();
-                Object result = method.invoke(controller);
-                displayResult(req, res, result);
-            } catch (Exception e) {
-                e.printStackTrace();
+        String prefix = context.getInitParameter("view-prefix");
+        String sufix = context.getInitParameter("view-suffix");
+        Object springContext = context.getAttribute("springContext");
+
+        @SuppressWarnings("unchecked")
+        HashMap<UrlMethode, Mapping> mapping = (HashMap<UrlMethode, Mapping>) context.getAttribute("mapping");
+        // out.println(mapping);
+        if (mapping == null) {
+            resp.setContentType("text/plain;charset=UTF-8");
+            resp.getWriter().println("Mapping introuvable");
+            return;
+        }
+        String askUrl = req.getRequestURI();
+        String contextPath = req.getContextPath();
+
+        askUrl = askUrl.substring(contextPath.length());
+        // out.println(askUrl);
+        HttpMethode methode = HttpMethode.valueOf(req.getMethod());
+        UrlMethode urlMethode = new UrlMethode(askUrl, methode);
+
+        Mapping map = mapping.get(urlMethode);
+        if (map != null) {
+            Class<?> class1 = map.getControllerClass();
+            Method method = map.getMethod();
+            // out.println("Url existe :");
+            // out.println(askUrl + " (" + method + ") --> " +
+            // map.getClass().getSimpleName() + " | " + method.getName());
+            // out.println("Execution de la methode demandé.... ");
+            Parameter[] a = method.getParameters();
+
+            Class<?> returnType = method.getReturnType();
+            if (returnType != ModelAndView.class && !method.isAnnotationPresent(ApiREST.class)) {
+                throw new ServletException("La methode " + method + " n'as pas de type de retour valide");
             }
-            //displayMapping(req, res, path, mapping);
-        } else {
-            handleNotFound(req, res);
+            try {
+                Object obj = class1.getDeclaredConstructor().newInstance();
+
+                Object resultRetour;
+                boolean hasSpringContextParameter = false;
+                for (Parameter parameter : a) {
+                    if (parameter.getType().getName().equals("org.springframework.web.context.WebApplicationContext")) {
+                        hasSpringContextParameter = true;
+                        break;
+                    }
+                }
+                if (hasSpringContextParameter) {
+                    if (springContext == null) {
+                        throw new ServletException("Le contexte spring n'as pas été trouvé");
+                    }
+                    resultRetour = method.invoke(obj, springContext);
+                } else {
+                    resultRetour = method.invoke(obj);
+                }
+
+                if (resultRetour != null) {
+                    // out.println(resultRetour.toString());
+                    if (returnType == ModelAndView.class) {
+
+                        ModelAndView retour = (ModelAndView) resultRetour;
+                        addArgToRequest(req, retour.getData());
+                        String path = "/" + prefix + "/" + retour.getView() + "." + sufix;
+                        RequestDispatcher dispat = req.getRequestDispatcher(path);
+                        dispat.forward(req, resp);
+                    } else {
+                        resp.setContentType("application/json;charset=UTF-8");
+                        if (resultRetour instanceof String) {
+                            String retour = (String) resultRetour;
+                            resp.getWriter().write(retour);
+                        } else {
+                            String json = Util.toJSON(resultRetour);
+                            resp.getWriter().write(json);
+                        }
+                    }
+
+                } else {
+                    throw new ServletException("Le retour envoyé est null");
+
+                }
+
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException e) {
+                e.printStackTrace();
+                throw new ServletException("Erreur (LcsFw) :" + e);
+            }
+
+        }
+
+        else {
+            resp.setContentType("text/plain;charset=UTF-8");
+            PrintWriter out = resp.getWriter();
+            out.println("Framework de Lucas (LCSFW)");
+
+            out.println("Recherche :");
+            out.println(urlMethode.getUrl());
+            out.println(urlMethode.getMethode());
+            out.println(urlMethode.hashCode());
+            out.println("Url Introuvable, voici ceux qui existe :");
+            for (UrlMethode url : mapping.keySet()) {
+                Mapping nMap = mapping.get(url);
+
+                out.println(
+                        url.getUrl() + " --> " + nMap.getClass().getSimpleName() + " | " + nMap.getMethod().getName());
+
+            }
+        }
+
+    }
+
+    private void addArgToRequest(HttpServletRequest req, Map<String, Object> data) {
+        for (String argument : data.keySet()) {
+            Object value = data.get(argument);
+            req.setAttribute(argument, value);
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        processRequest(req, res);
-        // displayControllers(req, res);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        processRequest(req, res);
-        // displayControllers(req, res);
-    }
-
-    private void handleNotFound(HttpServletRequest req, HttpServletResponse res)
-            throws IOException {
-        res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        res.setContentType("text/html");
-        PrintWriter out = res.getWriter();
-
-        String path = req.getPathInfo();
-        if (path == null)
-            path = "/";
-        String method = req.getMethod();
-
-        out.println("<html><body>");
-        out.println("<h1>404 - URL Not Found</h1>");
-        out.println("<p>URL demandee: <strong>" + path + "</strong></p>");
-        out.println("<p>Methode HTTP: <strong>" + method + "</strong></p>");
-        out.println("<h2>URLs disponibles:</h2>");
-        out.println("<ul>");
-
-        for (RouteKey key : urlMappings.keySet()) {
-            RouteMapping mapping = urlMappings.get(key);
-            out.println("<li><strong>" + key.getMethod() + " " + key.getUrl() + "</strong> -> "
-                    + mapping.getController().getSimpleName()
-                    + "." + mapping.getMethod().getName() + "()</li>");
-        }
-
-        out.println("</ul>");
-        out.println("</body></html>");
-    }
-
-    private void displayMapping(HttpServletRequest req, HttpServletResponse res, String url, RouteMapping mapping)
-            throws IOException {
-        res.setContentType("text/html");
-        PrintWriter out = res.getWriter();
-
-        out.println("<!DOCTYPE html>");
-        out.println("<html>");
-        out.println("<head>");
-        out.println("    <meta charset=\"UTF-8\">");
-        out.println("    <title>Mapping trouve</title>");
-        out.println("</head>");
-        out.println("<body>");
-        out.println("    <h1>Mapping trouve</h1>");
-        out.println("    <p><strong>URL :</strong> " + url + "</p>");
-        out.println("    <p><strong>Methode HTTP :</strong> " + req.getMethod() + "</p>");
-        out.println("    <p><strong>Controleur :</strong> " + mapping.getController().getSimpleName() + "</p>");
-        out.println("    <p><strong>Methode :</strong> " + mapping.getMethod().getName() + "()</p>");
-        out.println("</body>");
-        out.println("</html>");
-    }
-
-    private void displayResult(HttpServletRequest req, HttpServletResponse res, Object result)
-            throws IOException {
-        res.setContentType("text/html");
-        PrintWriter out = res.getWriter();
-
-        out.println("<!DOCTYPE html>");
-        out.println("<html>");
-        out.println("<head>");
-        out.println("    <meta charset=\"UTF-8\">");
-        out.println("    <title>Resultat du controleur</title>");
-        out.println("</head>");
-        out.println("<body>");
-        out.println("    <h1>Resultat du controleur</h1>");
-        out.println("    <p><strong>URL :</strong> " + req.getPathInfo() + "</p>");
-        out.println("    <p><strong>Methode HTTP :</strong> " + req.getMethod() + "</p>");
-        out.println("    <p><strong>Resultat :</strong> " + result + "</p>");
-        out.println("</body>");
-        out.println("</html>");
-    }
 }

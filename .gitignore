@@ -1,0 +1,19 @@
+# Dossiers générés
+framework/build/
+test/
+
+# Fichiers compilés Java
+*.class
+Todo.md
+base.sql
+
+# Archives générées
+*.war
+
+# JAR généré par ton framework
+framework/URLframework.jar
+
+# Fichiers IDE
+.idea/
+.vscode/
+*.iml
