@@ -1,11 +1,13 @@
 # Dossiers générés
 framework/build/
-test/
+test2/build/
 
 # Fichiers compilés Java
 *.class
 Todo.md
 base.sql
+sujt.md
+toDo.md
 
 # Archives générées
 *.war

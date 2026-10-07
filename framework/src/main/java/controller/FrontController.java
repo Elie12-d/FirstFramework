@@ -73,22 +73,38 @@ public class FrontController extends HttpServlet {
             try {
                 Object obj = class1.getDeclaredConstructor().newInstance();
 
-                Object resultRetour;
-                boolean hasSpringContextParameter = false;
-                for (Parameter parameter : a) {
-                    if (parameter.getType().getName().equals("org.springframework.web.context.WebApplicationContext")) {
-                        hasSpringContextParameter = true;
-                        break;
+                // Object resultRetour;
+                // boolean hasSpringContextParameter = false;
+                // for (Parameter parameter : a) {
+                // if
+                // (parameter.getType().getName().equals("org.springframework.web.context.WebApplicationContext"))
+                // {
+                // hasSpringContextParameter = true;
+                // break;
+                // }
+                // }
+                // if (hasSpringContextParameter) {
+                // if (springContext == null) {
+                // throw new ServletException("Le contexte spring n'as pas été trouvé");
+                // }
+                // resultRetour = method.invoke(obj, springContext);
+                // } else {
+                // resultRetour = method.invoke(obj);
+                // }
+
+                Object[] arguments = new Object[a.length];
+                for (int i = 0; i < a.length; i++) {
+                    Parameter parameter = a[i];
+                    String parameterName = parameter.getName();
+                    System.out.println("Parametre : " + parameterName + " | Type : " + parameter.getType().getName());
+                    String value = req.getParameter(parameterName);
+                    if (value != null) {
+                        arguments[i] = value;
+                    } else {
+                        arguments[i] = null;
                     }
                 }
-                if (hasSpringContextParameter) {
-                    if (springContext == null) {
-                        throw new ServletException("Le contexte spring n'as pas été trouvé");
-                    }
-                    resultRetour = method.invoke(obj, springContext);
-                } else {
-                    resultRetour = method.invoke(obj);
-                }
+                Object resultRetour = method.invoke(obj, arguments);
 
                 if (resultRetour != null) {
                     // out.println(resultRetour.toString());
@@ -96,7 +112,7 @@ public class FrontController extends HttpServlet {
 
                         ModelAndView retour = (ModelAndView) resultRetour;
                         addArgToRequest(req, retour.getData());
-                        String path = "/" + prefix + "/" + retour.getView() + "." + sufix;
+                        String path = prefix + retour.getView() + "." + sufix;
                         RequestDispatcher dispat = req.getRequestDispatcher(path);
                         dispat.forward(req, resp);
                     } else {
@@ -118,7 +134,7 @@ public class FrontController extends HttpServlet {
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException e) {
                 e.printStackTrace();
-                throw new ServletException("Erreur (LcsFw) :" + e);
+                throw new ServletException("Erreur :" + e);
             }
 
         }
@@ -126,13 +142,13 @@ public class FrontController extends HttpServlet {
         else {
             resp.setContentType("text/plain;charset=UTF-8");
             PrintWriter out = resp.getWriter();
-            out.println("Framework de Lucas (LCSFW)");
+            out.println("Framework");
 
             out.println("Recherche :");
             out.println(urlMethode.getUrl());
             out.println(urlMethode.getMethode());
             out.println(urlMethode.hashCode());
-            out.println("Url Introuvable, voici ceux qui existe :");
+            out.println("Url Introuvable, voici ceux qui existent :");
             for (UrlMethode url : mapping.keySet()) {
                 Mapping nMap = mapping.get(url);
 
