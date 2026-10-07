@@ -38,7 +38,7 @@ public class FrontControllerListner implements ServletContextListener {
             ScanAnnotation.generateMap(mapping, CONTROLLER_ANNOTATION, URLMAPPING_ANNOTATION, packageController);
             context.setAttribute(MAPPING_ATTRIBUTE, mapping);
         } catch (Exception e) {
-            System.out.println("Erreur (LcsFw):");
+            System.out.println("Erreur:");
             e.printStackTrace();
         }
         context.setAttribute("springContext", context.getAttribute(SPRING_ROOT));
