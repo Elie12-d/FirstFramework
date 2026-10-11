@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
+import java.lang.reflect.Field;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -25,15 +26,24 @@ public class FrontController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        processRequest(req, resp);
+        try {
+            processRequest(req, resp);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        processRequest(req, resp);
+        try {
+            processRequest(req, resp);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
     }
 
-    private void processRequest(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private void processRequest(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException, Exception {
         ServletContext context = req.getServletContext();
 
         String prefix = context.getInitParameter("view-prefix");
@@ -52,18 +62,15 @@ public class FrontController extends HttpServlet {
         String contextPath = req.getContextPath();
 
         askUrl = askUrl.substring(contextPath.length());
-        // out.println(askUrl);
+        // ici url: ceux qui sont derriere le nom du projet, exemple: /hello, /api/etudiants, /save
         HttpMethode methode = HttpMethode.valueOf(req.getMethod());
         UrlMethode urlMethode = new UrlMethode(askUrl, methode);
+        // le url methode , ex : /api/etudiants, GET
 
         Mapping map = mapping.get(urlMethode);
         if (map != null) {
             Class<?> class1 = map.getControllerClass();
             Method method = map.getMethod();
-            // out.println("Url existe :");
-            // out.println(askUrl + " (" + method + ") --> " +
-            // map.getClass().getSimpleName() + " | " + method.getName());
-            // out.println("Execution de la methode demandé.... ");
             Parameter[] a = method.getParameters();
 
             Class<?> returnType = method.getReturnType();
@@ -71,38 +78,22 @@ public class FrontController extends HttpServlet {
                 throw new ServletException("La methode " + method + " n'as pas de type de retour valide");
             }
             try {
+                // Object obj1 = this.createObjectFromRequest(class1, req);
                 Object obj = class1.getDeclaredConstructor().newInstance();
-
-                // Object resultRetour;
-                // boolean hasSpringContextParameter = false;
-                // for (Parameter parameter : a) {
-                // if
-                // (parameter.getType().getName().equals("org.springframework.web.context.WebApplicationContext"))
-                // {
-                // hasSpringContextParameter = true;
-                // break;
-                // }
-                // }
-                // if (hasSpringContextParameter) {
-                // if (springContext == null) {
-                // throw new ServletException("Le contexte spring n'as pas été trouvé");
-                // }
-                // resultRetour = method.invoke(obj, springContext);
-                // } else {
-                // resultRetour = method.invoke(obj);
-                // }
 
                 Object[] arguments = new Object[a.length];
                 for (int i = 0; i < a.length; i++) {
                     Parameter parameter = a[i];
-                    String parameterName = parameter.getName();
-                    System.out.println("Parametre : " + parameterName + " | Type : " + parameter.getType().getName());
-                    String value = req.getParameter(parameterName);
-                    if (value != null) {
-                        arguments[i] = value;
-                    } else {
-                        arguments[i] = null;
-                    }
+                    // String parameterName = parameter.getName();
+                    Class<?> parameterType = parameter.getType();
+                    Object objetClass = this.createObjectFromRequest(parameterType, req);
+                    arguments[i] = objetClass;
+                    // String value = req.getParameter(parameterName);
+                    // if (value != null) {
+                    // arguments[i] = value;
+                    // } else {
+                    // arguments[i] = null;
+                    // }
                 }
                 Object resultRetour = method.invoke(obj, arguments);
 
@@ -165,6 +156,26 @@ public class FrontController extends HttpServlet {
             Object value = data.get(argument);
             req.setAttribute(argument, value);
         }
+    }
+
+    private Object createObjectFromRequest(Class<?> clazz, HttpServletRequest req) throws Exception {
+
+        Object object = clazz.getDeclaredConstructor().newInstance();
+
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            String value = req.getParameter(fieldName);
+            if (value != null) {
+                field.setAccessible(true);
+                if (field.getType() == String.class) {
+                    field.set(object, value);
+                } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                    field.set(object, Integer.parseInt(value));
+                }
+            }
+        }
+        return object;
     }
 
 }

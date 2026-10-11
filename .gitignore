@@ -18,4 +18,3 @@ framework/URLframework.jar
 # Fichiers IDE
 .idea/
 .vscode/
-*.iml

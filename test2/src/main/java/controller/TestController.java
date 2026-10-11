@@ -9,6 +9,7 @@ import main.java.annotation.UrlMapping;
 import main.java.entity.Etudiant;
 import main.java.http.HttpMethode;
 import main.java.view.ModelAndView;
+import main.java.prs.Personne;
 
 @Controller
 public class TestController {
@@ -32,10 +33,20 @@ public class TestController {
         etudiants.add(new Etudiant(2, "esther"));
         return etudiants;
     }
-    
+
+    @UrlMapping(url = "/save", method = HttpMethode.POST)
     @ApiREST
-    @UrlMapping (url = "/save", method = HttpMethode.POST)
-    public String save(String nom, String prenom) {
-        return "Nom: " + nom + ", Prenom: " + prenom;
+    public String save(Personne personne) {
+
+        System.out.println(personne.getNom());
+        System.out.println(personne.getPrenom());
+        System.out.println(personne.getAge());
+
+        return "Personne enregistrée avec succès : " + personne.getNom() + " " + personne.getPrenom() + ", Age: " + personne.getAge();
     }
+    // @UrlMapping (url = "/save", method = HttpMethode.POST)
+    // @ApiREST
+    // public String test(String nom, String prenom, int age) {
+    //     return "Personne enregistrée avec succès : " + nom + " " + prenom + ", Age: " + age;
+    // }
 }
