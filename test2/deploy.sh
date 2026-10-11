@@ -2,7 +2,7 @@
 set -e
 
 # Définition des variables
-APP_NAME="Sprint7"
+APP_NAME="Sprint7Bis"
 SRC_DIR="src/main/java"
 WEB_DIR="src/main/webapps"
 BUILD_DIR="build"
