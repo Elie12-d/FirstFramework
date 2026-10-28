@@ -1,6 +1,7 @@
 # Dossiers générés
 framework/build/
 test2/build/
+test2/uploads/
 
 # Fichiers compilés Java
 *.class

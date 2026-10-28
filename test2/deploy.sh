@@ -2,7 +2,7 @@
 set -e
 
 # Définition des variables
-APP_NAME="Sprint7Bis"
+APP_NAME="Sprint8"
 SRC_DIR="src/main/java"
 WEB_DIR="src/main/webapps"
 BUILD_DIR="build"
@@ -10,6 +10,7 @@ LIB_DIR="lib"
 TOMCAT_WEBAPPS="/home/elie/apache-tomcat-10.1.28/webapps"
 SERVLET_API_JAR="$LIB_DIR/servlet-api.jar"
 MY_FRAMEWORK_JAR="$LIB_DIR/URLframework.jar"
+RESOURCES_DIR="src/main/resources"
 
 # Nettoyage et création du répertoire temporaire
 rm -rf $BUILD_DIR
@@ -30,6 +31,11 @@ rm sources.txt
 # Copier les fichiers web (web.xml, JSP, etc.)
 if [ -d "$WEB_DIR" ]; then
     cp -r $WEB_DIR/* $BUILD_DIR/
+fi
+
+# Copier les ressources (application.properties, etc.)
+if [ -d "$RESOURCES_DIR" ]; then
+    cp -r "$RESOURCES_DIR/." "$BUILD_DIR/WEB-INF/classes/"
 fi
 
 # Générer le fichier .war dans le dossier build
