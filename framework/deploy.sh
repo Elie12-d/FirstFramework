@@ -11,7 +11,8 @@ javac -parameters --release 17 -cp "lib/*" -d build\
  src/main/java/annotation/*.java \
  src/main/java/http/*.java \
  src/main/java/mapping/*.java \
- src/main/java/view/*.java
+ src/main/java/view/*.java \
+ src/main/java/upload/*.java
 
 echo "Compilation terminée. Les fichiers .class sont dans le dossier 'build'."
 

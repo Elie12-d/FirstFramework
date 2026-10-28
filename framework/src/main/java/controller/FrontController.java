@@ -1,6 +1,7 @@
 package main.java.controller;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,13 +16,19 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import jakarta.servlet.annotation.MultipartConfig;
+
 import main.java.annotation.ApiREST;
 import main.java.http.HttpMethode;
 import main.java.mapping.Mapping;
 import main.java.mapping.UrlMethode;
+import main.java.upload.UploadedFile;
 import main.java.utils.Util;
 import main.java.view.ModelAndView;
+import main.java.upload.UploadConfig;
 
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class FrontController extends HttpServlet {
 
     @Override
@@ -55,14 +62,15 @@ public class FrontController extends HttpServlet {
         // out.println(mapping);
         if (mapping == null) {
             resp.setContentType("text/plain;charset=UTF-8");
-            resp.getWriter().println("Mapping introuvable");
+            resp.getWriter().println("Mapping introuvab2le");
             return;
         }
         String askUrl = req.getRequestURI();
         String contextPath = req.getContextPath();
 
         askUrl = askUrl.substring(contextPath.length());
-        // ici url: ceux qui sont derriere le nom du projet, exemple: /hello, /api/etudiants, /save
+        // ici url: ceux qui sont derriere le nom du projet, exemple: /hello,
+        // /api/etudiants, /save
         HttpMethode methode = HttpMethode.valueOf(req.getMethod());
         UrlMethode urlMethode = new UrlMethode(askUrl, methode);
         // le url methode , ex : /api/etudiants, GET
@@ -78,7 +86,6 @@ public class FrontController extends HttpServlet {
                 throw new ServletException("La methode " + method + " n'as pas de type de retour valide");
             }
             try {
-                // Object obj1 = this.createObjectFromRequest(class1, req);
                 Object obj = class1.getDeclaredConstructor().newInstance();
 
                 Object[] arguments = new Object[a.length];
@@ -86,8 +93,30 @@ public class FrontController extends HttpServlet {
                     Parameter parameter = a[i];
                     // String parameterName = parameter.getName();
                     Class<?> parameterType = parameter.getType();
-                    Object objetClass = this.createObjectFromRequest(parameterType, req);
-                    arguments[i] = objetClass;
+                    if (parameterType == UploadedFile.class) {
+                        String parameterName = parameter.getName();
+                        Part part = req.getPart(parameterName);
+                        if (part == null
+                                || part.getSubmittedFileName() == null
+                                || part.getSubmittedFileName().isEmpty()) {
+                            arguments[i] = null;
+                        } else {
+                            try (InputStream input = part.getInputStream()) {
+                                byte[] bytes = input.readAllBytes();
+                                // Lecture de application.properties
+                                String uploadDirectory = UploadConfig.getUploadDirectory(context);
+                                // Injection du fichier avec son dossier de stockage
+                                arguments[i] = new UploadedFile(
+                                        part.getSubmittedFileName(),
+                                        part.getContentType(),
+                                        bytes,
+                                        uploadDirectory);
+                            }
+                        }
+                    } else {
+                        arguments[i] = this.createObjectFromRequest(parameterType, req);
+                    }
+
                     // String value = req.getParameter(parameterName);
                     // if (value != null) {
                     // arguments[i] = value;
@@ -122,15 +151,23 @@ public class FrontController extends HttpServlet {
 
                 }
 
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                    | InvocationTargetException | NoSuchMethodException e) {
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    cause.printStackTrace();
+                    throw new ServletException(
+                            "Erreur dans la méthode du développeur : "
+                                    + cause.getMessage(),
+                            cause);
+                }
+                throw new ServletException(e);
+            } catch (InstantiationException | IllegalAccessException
+                    | IllegalArgumentException | NoSuchMethodException e) {
+
                 e.printStackTrace();
-                throw new ServletException("Erreur :" + e);
+                throw new ServletException("Erreur : " + e.getMessage(), e);
             }
-
-        }
-
-        else {
+        } else {
             resp.setContentType("text/plain;charset=UTF-8");
             PrintWriter out = resp.getWriter();
             out.println("Framework");
@@ -148,7 +185,6 @@ public class FrontController extends HttpServlet {
 
             }
         }
-
     }
 
     private void addArgToRequest(HttpServletRequest req, Map<String, Object> data) {

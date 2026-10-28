@@ -10,6 +10,7 @@ import main.java.entity.Etudiant;
 import main.java.http.HttpMethode;
 import main.java.view.ModelAndView;
 import main.java.prs.Personne;
+import main.java.upload.UploadedFile;
 
 @Controller
 public class TestController {
@@ -42,11 +43,24 @@ public class TestController {
         System.out.println(personne.getPrenom());
         System.out.println(personne.getAge());
 
-        return "Personne enregistrée avec succès : " + personne.getNom() + " " + personne.getPrenom() + ", Age: " + personne.getAge();
+        return "Personne enregistrée avec succès : " + personne.getNom() + " " + personne.getPrenom() + ", Age: "
+                + personne.getAge();
     }
     // @UrlMapping (url = "/save", method = HttpMethode.POST)
     // @ApiREST
     // public String test(String nom, String prenom, int age) {
-    //     return "Personne enregistrée avec succès : " + nom + " " + prenom + ", Age: " + age;
+    // return "Personne enregistrée avec succès : " + nom + " " + prenom + ", Age: "
+    // + age;
     // }
+
+    @UrlMapping(url = "/upload", method = HttpMethode.POST)
+    public ModelAndView upload(UploadedFile document) {
+        try {
+            String chemin = document.save();
+            System.out.println("Chemin : " + chemin);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ModelAndView("elie");
+    }
 }
