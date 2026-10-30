@@ -11,7 +11,7 @@ import main.java.http.HttpMethode;
 import main.java.view.ModelAndView;
 import main.java.prs.Personne;
 import main.java.upload.UploadedFile;
-
+import main.java.annotation.Auth;
 import main.java.session.Session;
 
 @Controller
@@ -48,13 +48,8 @@ public class TestController {
         return "Personne enregistrée avec succès : " + personne.getNom() + " " + personne.getPrenom() + ", Age: "
                 + personne.getAge();
     }
-    // @UrlMapping (url = "/save", method = HttpMethode.POST)
-    // @ApiREST
-    // public String test(String nom, String prenom, int age) {
-    // return "Personne enregistrée avec succès : " + nom + " " + prenom + ", Age: "
-    // + age;
-    // }
 
+    @Auth
     @UrlMapping(url = "/upload", method = HttpMethode.POST)
     public ModelAndView upload(UploadedFile document) {
         try {
@@ -97,4 +92,12 @@ public class TestController {
         }
         return "Nom enregistré : " + nom;
     }
+
+    @ApiREST
+    @UrlMapping(url = "/user/add", method = HttpMethode.GET)
+    public String addUser(Session session) {
+        session.setAttribute("user", "utilisateur");
+        return "user add successfully";
+    }
+
 }

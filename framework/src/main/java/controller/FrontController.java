@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.HttpSession;
 
 import main.java.annotation.ApiREST;
 import main.java.http.HttpMethode;
@@ -27,6 +28,8 @@ import main.java.upload.UploadedFile;
 import main.java.utils.Util;
 import main.java.view.ModelAndView;
 import main.java.upload.UploadConfig;
+import main.java.annotation.Auth;
+import main.java.utils.ResponseHelper;
 
 import main.java.session.Session;
 
@@ -87,6 +90,16 @@ public class FrontController extends HttpServlet {
             if (returnType != ModelAndView.class && !method.isAnnotationPresent(ApiREST.class)) {
                 throw new ServletException("La methode " + method + " n'as pas de type de retour valide");
             }
+
+            boolean api = method.isAnnotationPresent(ApiREST.class);
+            if (method.isAnnotationPresent(Auth.class)) {
+                HttpSession httpSession = req.getSession(false);
+                if (httpSession == null || httpSession.getAttribute("user") == null) {
+                    ResponseHelper.handleUnauthorized(resp, api);
+                    return;
+                }
+            }
+
             try {
                 Object obj = class1.getDeclaredConstructor().newInstance();
 
