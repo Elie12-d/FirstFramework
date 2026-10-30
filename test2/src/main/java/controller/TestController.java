@@ -49,7 +49,7 @@ public class TestController {
                 + personne.getAge();
     }
 
-    @Auth
+    @Auth(roles = {"ADMIN", "MANAGER"})
     @UrlMapping(url = "/upload", method = HttpMethode.POST)
     public ModelAndView upload(UploadedFile document) {
         try {
@@ -97,6 +97,15 @@ public class TestController {
     @UrlMapping(url = "/user/add", method = HttpMethode.GET)
     public String addUser(Session session) {
         session.setAttribute("user", "utilisateur");
+        session.setAttribute("roles", "ADMIN");
+        return "user add successfully";
+    }
+
+    @ApiREST
+    @UrlMapping(url = "/user/update", method = HttpMethode.GET)
+    public String UpdateUser(Session session) {
+        session.setAttribute("user", "utilisateur");
+        session.setAttribute("roles", "GAMER");
         return "user add successfully";
     }
 

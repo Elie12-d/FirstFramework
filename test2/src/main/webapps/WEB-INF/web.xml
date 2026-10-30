@@ -11,6 +11,11 @@
     </context-param>
 
     <context-param>
+        <param-name>roles-attribute-name</param-name>
+        <param-value>roles</param-value>
+    </context-param>
+
+    <context-param>
         <param-name>view-prefix</param-name>
         <param-value>/WEB-INF/views/</param-value>
     </context-param>
