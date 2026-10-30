@@ -28,6 +28,8 @@ import main.java.utils.Util;
 import main.java.view.ModelAndView;
 import main.java.upload.UploadConfig;
 
+import main.java.session.Session;
+
 @MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 5 * 1024 * 1024, maxRequestSize = 6 * 1024 * 1024)
 public class FrontController extends HttpServlet {
 
@@ -93,19 +95,20 @@ public class FrontController extends HttpServlet {
                     Parameter parameter = a[i];
                     // String parameterName = parameter.getName();
                     Class<?> parameterType = parameter.getType();
-                    if (parameterType == UploadedFile.class) {
+                    if (parameterType == Session.class) {
+                        arguments[i] = Session.from(req.getSession(true));
+                    } else if (parameterType == UploadedFile.class) {
                         String parameterName = parameter.getName();
                         Part part = req.getPart(parameterName);
                         if (part == null
                                 || part.getSubmittedFileName() == null
                                 || part.getSubmittedFileName().isEmpty()) {
+
                             arguments[i] = null;
                         } else {
                             try (InputStream input = part.getInputStream()) {
                                 byte[] bytes = input.readAllBytes();
-                                // Lecture de application.properties
                                 String uploadDirectory = UploadConfig.getUploadDirectory(context);
-                                // Injection du fichier avec son dossier de stockage
                                 arguments[i] = new UploadedFile(
                                         part.getSubmittedFileName(),
                                         part.getContentType(),
@@ -116,15 +119,21 @@ public class FrontController extends HttpServlet {
                     } else {
                         arguments[i] = this.createObjectFromRequest(parameterType, req);
                     }
-
-                    // String value = req.getParameter(parameterName);
-                    // if (value != null) {
-                    // arguments[i] = value;
-                    // } else {
-                    // arguments[i] = null;
-                    // }
                 }
+                // invocation de la methode
                 Object resultRetour = method.invoke(obj, arguments);
+
+                // Synchronisation de Session avec HttpSession
+                for (Object argument : arguments) {
+                    if (argument instanceof Session) {
+                        Session session = (Session) argument;
+                        session.flushTo(req.getSession(false));
+                    }
+                }
+
+                System.out.println(
+                        "Nom dans HttpSession : "
+                                + req.getSession(false).getAttribute("nom"));
 
                 if (resultRetour != null) {
                     // out.println(resultRetour.toString());

@@ -12,6 +12,8 @@ import main.java.view.ModelAndView;
 import main.java.prs.Personne;
 import main.java.upload.UploadedFile;
 
+import main.java.session.Session;
+
 @Controller
 public class TestController {
 
@@ -62,5 +64,37 @@ public class TestController {
             e.printStackTrace();
         }
         return new ModelAndView("elie");
+    }
+
+    @ApiREST
+    @UrlMapping(url = "/session/add", method = HttpMethode.POST)
+    public String ajouterSession(Session session) {
+        session.setAttribute("nom", "Rakoto");
+        return "Attribut nom ajouté avec succès";
+    }
+
+    @ApiREST 
+    @UrlMapping (url = "/session/remove", method = HttpMethode.GET)
+    public String removeSession(Session session) {
+        session.removeAttribute("nom");
+        return "La cle nom a ete supprime avec succes";
+
+    }
+
+    @ApiREST
+    @UrlMapping (url = "/session/update", method = HttpMethode.POST)
+    public String modifierSession(Session session) {
+        session.setAttribute("nom", "Jean");
+        return "Nom modifié avec succès";
+    }
+
+    @ApiREST
+    @UrlMapping(url = "/session/get", method = HttpMethode.GET)
+    public String lireSession(Session session) {
+        Object nom = session.getAttribute("nom");
+        if (nom == null) {
+            return "Aucun nom dans la session";
+        }
+        return "Nom enregistré : " + nom;
     }
 }
