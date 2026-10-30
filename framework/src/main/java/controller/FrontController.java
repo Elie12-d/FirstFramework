@@ -92,14 +92,64 @@ public class FrontController extends HttpServlet {
             }
 
             boolean api = method.isAnnotationPresent(ApiREST.class);
+
             if (method.isAnnotationPresent(Auth.class)) {
                 HttpSession httpSession = req.getSession(false);
+                // 1. Vérifier si l'utilisateur est connecté
                 if (httpSession == null || httpSession.getAttribute("user") == null) {
                     ResponseHelper.handleUnauthorized(resp, api);
                     return;
                 }
-            }
+                // 2. Récupérer les rôles exigés par @Auth
+                Auth auth = method.getAnnotation(Auth.class);
+                String[] requiredRoles = auth.roles();
+                // Aucun rôle exigé : l'authentification suffit
+                if (requiredRoles.length > 0) {
+                    // 3. Récupérer le nom de l'attribut configuré dans web.xml
+                    String rolesAttributeName = (String) context.getAttribute("roles-attribute-name");
+                    if (rolesAttributeName == null || rolesAttributeName.isEmpty()) {
+                        rolesAttributeName = "roles";
+                    }
 
+                    Object userRoles = httpSession.getAttribute(rolesAttributeName);
+                    boolean authorized = false;
+
+                    // 4. Vérifier un rôle unique
+                    if (userRoles instanceof String) {
+                        String userRole = (String) userRoles;
+
+                        for (String requiredRole : requiredRoles) {
+                            if (requiredRole.equals(userRole)) {
+                                authorized = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 5. Vérifier plusieurs rôles
+                    else if (userRoles instanceof java.util.Collection<?>) {
+                        java.util.Collection<?> roles = (java.util.Collection<?>) userRoles;
+                        for (Object userRole : roles) {
+                            if (userRole instanceof String) {
+                                for (String requiredRole : requiredRoles) {
+                                    if (requiredRole.equals(userRole)) {
+                                        authorized = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (authorized) {
+                                break;
+                            }
+                        }
+                    }
+                    // 6. Aucun rôle correspondant : accès interdit
+                    if (!authorized) {
+                        ResponseHelper.handleForbidden(resp, api);
+                        return;
+                    }
+                }
+            }
             try {
                 Object obj = class1.getDeclaredConstructor().newInstance();
 
