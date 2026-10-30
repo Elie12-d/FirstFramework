@@ -21,6 +21,16 @@
         <input type="file" name="document">
         <button type="submit">Envoyer</button>
     </form>
+    <form action="${pageContext.request.contextPath}/session/add" method="post">
+        <input type="text" name="nom" placeholder="Nom">
+        <button type="submit">Ajouter à la session</button>
+    </form>
+    <form action="${pageContext.request.contextPath}/session/get" method="get">
+        <button type="submit">Lire la session</button>
+    </form>
+    <form action="${pageContext.request.contextPath}/session/update" method="post">
+        <button type="submit">Mettre a jour</button>
+    </form>
 </body>
 
 </html>
